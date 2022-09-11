@@ -9,7 +9,6 @@ import tkinter as tk
 from tkinter import filedialog
 
 
-
 # Create datadase and tables
 con = sqlite3.connect('knowledge_checker.db')
 cur = con.cursor()
