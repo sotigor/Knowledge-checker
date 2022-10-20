@@ -1,63 +1,29 @@
-import tkinter as tk
 from tkinter import messagebox
 import sqlite3
-from csv_to_bd import *
-import csv
 from datetime import datetime
-from tkinter import ttk
 import tkinter as tk
 from tkinter import filedialog
 
+from scripts_user import option_variables, window_action, database_action, csv_to_bd, authent_checker
+from scripts_user import question_handler
 
-# Create datadase and tables
-con = sqlite3.connect('knowledge_checker.db')
-cur = con.cursor()
+# Create DataBase and tables in it
+database_action.create_db_tables()
 
-cur.execute('''CREATE TABLE IF NOT EXISTS Хімія
-               (ID INTEGER PRIMARY KEY AUTOINCREMENT,
-               questions text, 
-               answers text,
-               form integer
-               )''')
-cur.execute('''CREATE TABLE IF NOT EXISTS Математика
-               (ID INTEGER PRIMARY KEY AUTOINCREMENT,
-               questions text, 
-               answers text,
-               form integer
-               )''')
-cur.execute('''CREATE TABLE IF NOT EXISTS personal_data
-               (ID INTEGER PRIMARY KEY AUTOINCREMENT,
-               name,
-               password
-               )''')
-cur.execute('''CREATE TABLE IF NOT EXISTS complaints
-               (ID INTEGER PRIMARY KEY AUTOINCREMENT,
-               question text,
-               complaints text,
-               subject,
-               date
-               )''')
-
-con.commit()
-con.close()
-
-
+# Create start window
 class StartWindow:
     def __init__(self, start_window):
+        """
+        Creating new window
+        :param start_window - is the name of new window
+        """
         self.start_window = start_window
         start_window.title("Knowledge_checker")
 
         # Size of window and locate window on the screen
-        start_window.resizable(False, False)
-        screen_width = start_window.winfo_screenwidth()
-        screen_height = start_window.winfo_screenheight()
-        window_width = 440
-        window_height= 480
-        x_cordinate = int((screen_width / 2) - (window_width / 2))
-        y_cordinate = int((screen_height / 2) - (window_height / 2))
-        start_window.geometry(f'{window_width}x{window_height}+{x_cordinate}+{y_cordinate}')
+        window_action.put_in_center(start_window)
 
-        # Making lable
+        # Making lables
         lbl_0 = tk.Label(start_window, text="Програма Knowledge checker\nдопоможе вам стати розумнішим!",
                          font="Calibri 18")
         lbl_0.grid(column=0, row=0, pady=20, padx=30)
@@ -84,37 +50,64 @@ class StartWindow:
         bt_4.bind('<Return>', self.enter_button_handler_for_bt_4)
 
     def enter_button_handler_for_bt_1(self, event) -> None:
+        """
+        Event handler: calling new function
+        """
         self.get_sign_in_window()
 
     def enter_button_handler_for_bt_2(self, event) -> None:
+        """
+        Event handler: calling new function
+        """
         self.get_sign_up_window()
 
     def enter_button_handler_for_bt_3(self, event) -> None:
+        """
+        Event handler: exit from program
+        """
         exit()
 
     def enter_button_handler_for_bt_4(self, event) -> None:
+        """
+        Event handler: calling new function
+        """
         self.get_admin_window()
 
     def get_sign_in_window(self) -> None:
+        """
+        Hiding the current window and creating a new one
+        """
         self.start_window.withdraw()
         SignInWindow(self.start_window, self.bt_1)
 
     def get_sign_up_window(self) -> None:
+        """
+        Hiding the current window and creating a new one
+        """
         self.start_window.withdraw()
         SignUpWindow(self.start_window, self.bt_1)
 
-    def get_admin_window(self):
+    def get_admin_window(self) -> None:
+        """
+        Hiding the current window and calling a class with a new one
+        """
         self.start_window.withdraw()
-        AdminLoginWindow(self.start_window,self.bt_1)
+        AdminLoginWindow(self.start_window, self.bt_1)
 
 
 class SignInWindow:
-    def __init__(self, start_window, bt_1)-> None:
+    def __init__(self, start_window, bt_1) -> None:
+        """
+        Creating new window
+        :param start_window: the name of previous window; use to make it visible
+        :param bt_1: the name button from previous window; use to make this button focused
+        """
         self.sign_in_window = tk.Tk()
         self.sign_in_window.title('Sign in')
         self.start_window = start_window
         self.start_window_bt_1 = bt_1
 
+        #Making lables
         f = ('Times', 14)
         frame_1 = tk.Frame(self.sign_in_window, bd=10, bg='#CCACCC', relief='groove', padx=10, pady=10)
         lbl_30 = tk.Label(frame_1, text="Введіть ім'я:", bg='#CCACCC', font=f)
@@ -123,12 +116,14 @@ class SignInWindow:
         lbl_31 = tk.Label(frame_1, text="Введіть пароль:", bg='#CCACCC', font=f)
         lbl_31.grid(row=1, column=0, pady=10, sticky='W')
 
+        #Making entry field
         self.name = tk.Entry(frame_1, font=f)
         self.name.focus_force()
-        self.pwd_1 = tk.Entry(frame_1, font=f, show='*')
+        self.psw_1 = tk.Entry(frame_1, font=f, show='*')
 
+        #Making buttons
         login_btn_1 = tk.Button(frame_1, width=10, text='Увійти', font=f, relief='solid', cursor='hand2',
-                                command=lambda: self.sign_inup_checker(self.name.get(), self.pwd_1.get(), self.sign_in_window, key=True))
+                                command=lambda: self.go_to_choice_window())
         login_btn_1.bind('<Return>', self.enter_button_handler_for_login_btn_1)
 
         login_btn_2 = tk.Button(frame_1, width=10, text='Назад', font=f, relief='solid', cursor='hand2',
@@ -136,107 +131,63 @@ class SignInWindow:
         login_btn_2.bind('<Return>', self.enter_button_handler_for_login_btn_2)
 
         self.name.grid(row=0, column=1, pady=10, padx=20)
-        self.pwd_1.grid(row=1, column=1, pady=10, padx=20)
+        self.psw_1.grid(row=1, column=1, pady=10, padx=20)
 
         login_btn_1.grid(row=3, column=1, pady=10, padx=20)
         login_btn_2.grid(row=3, column=0, pady=10, padx=20)
         frame_1.pack()
-        self.sign_in_window.mainloop()
 
-    def enter_button_handler_for_login_btn_1(self,event):
-        self.sign_inup_checker(self.name.get(), self.pwd_1.get(), self.sign_in_window, key=True)
+    def enter_button_handler_for_login_btn_1(self, event) -> None:
+        """
+        Event handler: calling new function
+        """
+        self.go_to_choice_window()
 
-    def enter_button_handler_for_login_btn_2(self, event):
+    def enter_button_handler_for_login_btn_2(self, event) -> None:
+        """
+        Event handler: calling new functions
+        """
         self.sign_in_window.destroy()
         self.go_to_startWindow()
 
-    def go_to_startWindow(self):
+    def go_to_startWindow(self) -> None:
+        """
+        Making previous window visible and button focused
+        :return: None
+        """
         self.start_window.deiconify()
         self.start_window_bt_1.focus_force()
 
-    def sign_inup_checker(self, name, psw_1, sign_in_window, psw_2="1", key=False):
-        check_counter = 0
-        if name == "":
-            warn = "Поле для ім'я не може бути порожнім"
-            messagebox.showwarning("Warning", warn)
-        else:
-            check_counter += 1
-
-        if psw_1 == "":
-            warn = "Поле пароля не може бути порожнім"
-            messagebox.showwarning("Warning", warn)
-        else:
-            check_counter += 1
-
-        if key == False:
-            if psw_2 == "":
-                warn = "Поле для підтвердження паролю не може бути порожнім"
-                messagebox.showwarning("Warning", warn)
-            else:
-                check_counter += 1
-            if psw_1 != psw_2:
-                warn = "Паролі у двох полях не співпадають!"
-                messagebox.showwarning("Warning", warn)
-            else:
-                check_counter += 1
-
-            if check_counter == 4:
-                con = sqlite3.connect('knowledge_checker.db')
-                cur = con.cursor()
-
-                exist_name = \
-                cur.execute(f"SELECT NOT EXISTS(SELECT 1 FROM personal_data WHERE name='{name}');").fetchone()[0]
-                exist_all = cur.execute(f"SELECT * FROM personal_data;").fetchall()
-
-                if exist_name:
-                    cur.execute("INSERT INTO personal_data VALUES (:name, :password)", {
-                        'name': name,
-                        'password': psw_1})
-                    con.commit()
-                    con.close()
-                    messagebox.showinfo('confirmation', 'Запис зроблено')
-                    sign_in_window.destroy()
-                    self.back()
-                else:
-                    warn = "Таке ім'я вже існує. Введіть інше.\nПідказка: cпробуйте додати до ім'я рік народження."
-                    messagebox.showwarning("Warning", warn)
-        else:
-            con = sqlite3.connect('knowledge_checker.db')
-            cur = con.cursor()
-            not_exist_name = \
-                cur.execute(f"SELECT NOT EXISTS(SELECT 1 FROM personal_data WHERE name = '{name}');").fetchone()[0]
-            if not_exist_name == 0:
-                correct_psw = cur.execute(f"SELECT * FROM personal_data WHERE name = '{name}';").fetchone()[2]
-                if correct_psw != psw_1:
-                    not_correct_psw = True
-                    messagebox.showwarning("confirmation", "Не вірно введений пароль.\nПеревірте будь-ласка.")
-                else:
-                    not_correct_psw = False
-                    sign_in_window.destroy()
-                    self.start_window.withdraw()
-                    ChoiceWindow()
-            else:
-                messagebox.showwarning("confirmation", "Не вірно введене ім'я.\nПеревірте будь-ласка.")
-            con.close()
+    def go_to_choice_window(self) -> None:
+        """
+        Destroy current window and call new class (create new window)
+        :return: None
+        """
+        if authent_checker.sign_inup_checker(self.name.get(), self.psw_1.get(), key=True):
+            self.sign_in_window.destroy()
+            ChoiceWindow()
 
 
 class SignUpWindow:
-    def __init__(self, start_window, bt_1):
-        """Creating the new tk window for signing in
+    def __init__(self, start_window, bt_1) -> None:
+        """Creating the new window for signing up
 
-        :param start_window: for making start_window visible
-        :param bt_1: for making focuse on this button after returning to start_window
+        :param start_window: making start_window visible
+        :param bt_1: making focused button after returning to start_window
+        :return: None
         """
+
+        # Making new window
         self.sign_up_window = tk.Tk()
         self.sign_up_window.title('Knowledge_checker')
         self.sign_up_window.config(bg='#0B5A81')
+
         self.start_window = start_window
         self.start_window_bt_1 = bt_1
 
+        # Make labels
         f = ('Times', 14)
-
         frame_1 = tk.Frame(self.sign_up_window, bd=10, bg='#CCACCC', relief='groove', padx=10, pady=10)
-
         lbl_30 = tk.Label(frame_1, text="Введіть ім'я:", bg='#CCCCCC', font=f)
         lbl_30.grid(row=0, column=0, sticky='W', pady=10)
         lbl_30.focus_set()
@@ -247,103 +198,57 @@ class SignUpWindow:
         lbl_32 = tk.Label(frame_1, text="Повторіть пароль:", bg='#CCCCCC', font=f)
         lbl_32.grid(row=2, column=0, pady=10, sticky='W')
 
+        # Making entry fields
         self.name = tk.Entry(frame_1, font=f)
         self.name.focus_force()
 
-        self.pwd_1 = tk.Entry(frame_1, font=f, show='*')
-        self.pwd_2 = tk.Entry(frame_1, font=f, show='*')
+        self.psw_1 = tk.Entry(frame_1, font=f, show='*')
+        self.psw_2 = tk.Entry(frame_1, font=f, show='*')
 
         login_btn_1 = tk.Button(frame_1, width=10, text='Відправити', font=f, relief='solid', cursor='hand2',
-                                command=lambda: self.sign_inup_checker(self.name.get(), self.pwd_1.get(), self.sign_up_window, psw_2=self.pwd_2.get()))
+                                command=lambda: self.go_to_choice_window())
         login_btn_1.bind('<Return>', self.enter_button_handler_for_login_btn_1)
         login_btn_2 = tk.Button(frame_1, width=10, text='Назад', font=f, relief='solid', cursor='hand2',
                                 command=lambda: [self.sign_up_window.destroy(), self.go_to_startWindow()])
         login_btn_2.bind('<Return>', self.enter_button_handler_for_login_btn_2)
+
         self.name.grid(row=0, column=1, pady=10, padx=20)
-        self.pwd_1.grid(row=1, column=1, pady=10, padx=20)
-        self.pwd_2.grid(row=2, column=1, pady=10, padx=20)
+        self.psw_1.grid(row=1, column=1, pady=10, padx=20)
+        self.psw_2.grid(row=2, column=1, pady=10, padx=20)
 
         login_btn_1.grid(row=3, column=1, pady=10, padx=20)
         login_btn_2.grid(row=3, column=0, pady=10, padx=20)
         frame_1.pack()
-        #sign_up_window.mainloop()
     
-    def enter_button_handler_for_login_btn_1(self,event):
-        self.sign_inup_checker(self.name.get(), self.pwd_1.get(), self.sign_up_window, psw_2=self.pwd_2.get())
+    def enter_button_handler_for_login_btn_1(self,event) -> None:
+        """
+        Event handler: calling new function
+        """
+        self.go_to_choice_window()
 
-    def enter_button_handler_for_login_btn_2(self, event):
+    def enter_button_handler_for_login_btn_2(self, event) -> None:
+        """
+        Event handler: calling new functions
+        """
         self.sign_up_window.destroy()
         self.go_to_startWindow()
 
-    def go_to_startWindow(self):
+    def go_to_choice_window(self) -> None:
+        """
+        Destroy current window and call new class (create new window)
+        :return: None
+        """
+        if authent_checker.sign_inup_checker(self.name.get(), self.psw_1.get(), psw_2=self.psw_2.get()):
+            self.sign_up_window.destroy()
+            ChoiceWindow()
+
+    def go_to_startWindow(self) -> None:
+        """
+        Return to previous window and make focused button in it
+        :return: None
+        """
         self.start_window.deiconify()
         self.start_window_bt_1.focus_force()
-        
-    def sign_inup_checker(self, name, psw_1, sign_in_window, psw_2="1", key=False):
-        check_counter = 0
-        if name == "":
-            warn = "Поле для ім'я не може бути порожнім"
-            messagebox.showwarning("Warning", warn)
-        else:
-            check_counter += 1
-
-        if psw_1 == "":
-            warn = "Поле пароля не може бути порожнім"
-            messagebox.showwarning("Warning", warn)
-        else:
-            check_counter += 1
-
-        if key == False:
-            if psw_2 == "":
-                warn = "Поле для підтвердження паролю не може бути порожнім"
-                messagebox.showwarning("Warning", warn)
-            else:
-                check_counter += 1
-            if psw_1 != psw_2:
-                warn = "Паролі у двох полях не співпадають!"
-                messagebox.showwarning("Warning", warn)
-            else:
-                check_counter += 1
-
-            if check_counter == 4:
-                con = sqlite3.connect('knowledge_checker.db')
-                cur = con.cursor()
-
-                not_exist_name =\
-                    cur.execute(f"SELECT NOT EXISTS(SELECT 1 FROM personal_data WHERE name='{name}');").fetchone()[0]
-                exist_all = cur.execute(f"SELECT * FROM personal_data;").fetchall()
-
-                if not_exist_name:
-                    sqlite_insert_query = """INSERT INTO personal_data
-                                                  (name, password) 
-                                                   VALUES (?,?);"""
-                    pers_data = (name, psw_1)
-                    cur.execute(sqlite_insert_query, pers_data)
-                    con.commit()
-                    con.close()
-                    messagebox.showinfo('confirmation', 'Запис зроблено')
-                    sign_in_window.destroy()
-                    self.go_to_startWindow()
-                else:
-                    warn = "Таке ім'я вже існує. Введіть інше.\nПідказка: cпробуйте додати до ім'я рік народження."
-                    messagebox.showwarning("Warning", warn)
-        else:
-            con = sqlite3.connect('knowledge_checker.db')
-            cur = con.cursor()
-            not_exist_name = cur.execute(f"SELECT NOT EXISTS(SELECT 1 FROM personal_data WHERE name='{name}');").fetchone()[
-                0]
-            exist_psw = \
-            cur.execute(f"SELECT NOT EXISTS(SELECT 1 FROM personal_data WHERE password='{psw_1}');").fetchone()[0]
-            con.close()
-            if not_exist_name:
-                messagebox.showwarning("confirmation", "Не вірно введене ім'я.\nПеревірте будь-ласка.")
-            elif exist_psw:
-                messagebox.showwarning("confirmation", "Не вірно введений пароль.\nПеревірте будь-ласка.")
-            else:
-                sign_in_window.destroy()
-                self.start_window.withdraw()
-                ChoiceWindow()
-
 
 class AdminLoginWindow:
     def __init__(self, start_window, bt_1)-> None:
@@ -508,21 +413,14 @@ class AddQuesHandWindow:
         lbl_1 = tk.Label(self.add_ques_hand, text="Оберіть предмет:", font="16")
         lbl_1.grid(column=0, row=1, pady=20, padx=(10, 0), sticky='W')
 
+        # Get the list of subjects names
+        subject_set = option_variables.get_subjects()
+
+        # Create an optional menu with subject list
         self.opt_menu_var1 = tk.StringVar(self.add_ques_hand)
-        self.opt_menu_var1.set("Математика")
-        options_1 = [
-        "Математика",
-        "Хімія"]
-        """
-        options_1 = [
-            "Географія",
-            "Математика",
-            "Біологія",
-            "Фізика",
-            "Хімія",
-            "Англійська мова"]
-        """
-        list_of_subj = tk.OptionMenu(self.add_ques_hand, self.opt_menu_var1, *options_1)
+        self.opt_menu_var1.set(subject_set[0])
+        list_of_subj = tk.OptionMenu(self.add_ques_hand, self.opt_menu_var1, *subject_set)
+
         list_of_subj.config(width=15, font="16", bg="white", fg="black")
         list_of_subj.grid(row=1, column=1, sticky="W", padx=(0,10))
         list_of_subj.focus_force()
@@ -530,22 +428,13 @@ class AddQuesHandWindow:
         lbl_2 = tk.Label(self.add_ques_hand, text="Оберіть складність:", font="16")
         lbl_2.grid(column=0, row=2, pady=20, padx=(10, 0), sticky='W')
 
+        # Get the list of difficulty levels
+        difficulty_set = option_variables.get_difficulty()
+
         self.opt_menu_var2 = tk.StringVar(self.add_ques_hand)
-        self.opt_menu_var2.set("5 клас")
-        options_2 = [
-            "5 клас",
-            "6 клас"]
+        self.opt_menu_var2.set(difficulty_set[0])
 
-        """
-        options_2 = [
-            "5 клас",
-            "6 клас",
-            "7 клас",
-            "8 клас",
-            "9 клас"]
-        """
-
-        list_of_form = tk.OptionMenu(self.add_ques_hand, self.opt_menu_var2, *options_2)
+        list_of_form = tk.OptionMenu(self.add_ques_hand, self.opt_menu_var2, *difficulty_set)
         list_of_form.config(width=15, font="16", bg="white")
         list_of_form.grid(row=2, column=1, sticky="W")
         #list_of_form.focus_force()
@@ -613,23 +502,14 @@ class AddQuesFileWindow:
         lbl_1 = tk.Label(self.add_ques_file, text="Оберіть предмет:", font="16")
         lbl_1.grid(column=0, row=0, pady=20, padx=(10, 0))
 
+        # Get the list of subjects names
+        subject_set = option_variables.get_subjects()
+
+        # Create an optional menu with subject list
         self.opt_menu_var1 = tk.StringVar(self.add_ques_file)
-        self.opt_menu_var1.set("Математика")
-        options_1 = [
-        "Математика",
-        "Хімія"]
-        """
-        options_1 = [
-            "Географія",
-            "Математика",
-            "Біологія",
-            "Фізика",
-            "Хімія",
-            "Англійська мова"]
-        """
+        self.opt_menu_var1.set(subject_set[0])
 
-
-        list_of_subj = tk.OptionMenu(self.add_ques_file, self.opt_menu_var1, *options_1)
+        list_of_subj = tk.OptionMenu(self.add_ques_file, self.opt_menu_var1, *subject_set)
         list_of_subj.config(width=15, font="16", bg="white", fg="black")
         list_of_subj.grid(row=0, column=1, sticky="W", padx=(0,10))
         list_of_subj.focus_force()
@@ -653,7 +533,8 @@ class AddQuesFileWindow:
         bt_back.bind('<Return>', self.enter_button_handler_for_bt_back)
 
         bt_download = tk.Button(self.add_ques_file, text="Download", font = "16",
-                         command=lambda: self.add_csv_file_to_bd(self.add_ques_file, self.file_path.get(), self.opt_menu_var1.get()))
+                         command=lambda: self.add_csv_file_to_bd(self.add_ques_file, self.file_path.get(),
+                                                                 self.opt_menu_var1.get()))
         bt_download.grid(column=1, row=3, pady=20, padx=(0, 0))
         bt_download.bind('<Return>', self.enter_button_handler_for_bt_download)
 
@@ -672,9 +553,8 @@ class AddQuesFileWindow:
         self.admin_panel_window.deiconify()
 
     def add_csv_file_to_bd(self, add_ques_file, file_path, subject):
-        print(file_path, subject)
         try:
-            csv_to_bd(file_path, subject)
+            csv_to_bd.csv_to_bd(file_path, subject)
             messagebox.showinfo('confirmation', 'Файл завантажено успішно!')
             add_ques_file.destroy()
             self.admin_panel_window.deiconify()
@@ -1063,14 +943,7 @@ class ChoiceWindow:
         self.choice_window.title("Knowledge_checker")
 
         # Size of window and locate window on the screen
-        self.choice_window.resizable(False, False)
-        screen_width = self.choice_window.winfo_screenwidth()
-        screen_height = self.choice_window.winfo_screenheight()
-        window_width = 440
-        window_height= 480
-        x_cordinate = int((screen_width / 2) - (window_width / 2))
-        y_cordinate = int((screen_height / 2) - (window_height / 2))
-        self.choice_window.geometry(f'{window_width}x{window_height}+{x_cordinate}+{y_cordinate}')
+        window_action.put_in_center(self.choice_window)
 
         lbl_0 = tk.Label(self.choice_window, text="Вітаємо у програмі knowledge checker!", font="Calibri 18")
         lbl_0.grid(column=0, row=0, columnspan=5, pady=20, padx=20)
@@ -1078,22 +951,14 @@ class ChoiceWindow:
         lbl_1 = tk.Label(self.choice_window, text="Оберіть предмет:", font="16")
         lbl_1.grid(column=0, row=1, pady=20, padx=(0, 0))
 
-        self.opt_menu_var1 = tk.StringVar(self.choice_window)
-        self.opt_menu_var1.set("Математика")
-        options_1 = [
-        "Математика",
-        "Хімія"]
-        """
-        options_1 = [
-            "Географія",
-            "Математика",
-            "Біологія",
-            "Фізика",
-            "Хімія",
-            "Англійська мова"]
-        """
+        # Get the list of subjects names
+        subject_set = option_variables.get_subjects()
 
-        list_of_subj = tk.OptionMenu(self.choice_window, self.opt_menu_var1, *options_1)
+        # Create an optional menu with subject list
+        self.opt_menu_var1 = tk.StringVar(self.choice_window)
+        self.opt_menu_var1.set(subject_set[0])
+
+        list_of_subj = tk.OptionMenu(self.choice_window, self.opt_menu_var1, *subject_set)
         list_of_subj.config(width=15, font="16", bg="white", fg="black")
         list_of_subj.grid(row=1, column=1, sticky="W")
         #list_of_subj.focus_force()
@@ -1101,22 +966,13 @@ class ChoiceWindow:
         lbl_2 = tk.Label(self.choice_window, text="Оберіть складність:", font="16")
         lbl_2.grid(column=0, row=2, pady=20, padx=(0, 0))
 
+        # Get the list of difficulty levels
+        difficulty_set = option_variables.get_difficulty()
+
         self.opt_menu_var2 = tk.StringVar(self.choice_window)
-        self.opt_menu_var2.set("5 клас")
-        options_2 = [
-            "5 клас",
-            "6 клас"]
+        self.opt_menu_var2.set(difficulty_set[0])
 
-        """
-        options_2 = [
-            "5 клас",
-            "6 клас",
-            "7 клас",
-            "8 клас",
-            "9 клас"]
-        """
-
-        list_of_form = tk.OptionMenu(self.choice_window, self.opt_menu_var2, *options_2)
+        list_of_form = tk.OptionMenu(self.choice_window, self.opt_menu_var2, *difficulty_set)
         list_of_form.config(width=15, font="16", bg="white")
         list_of_form.grid(row=2, column=1, sticky="W")
         #list_of_form.focus_force()
@@ -1125,20 +981,11 @@ class ChoiceWindow:
         lbl_3 = tk.Label(self.choice_window, text="Кількість питань в тесті:", font="16")
         lbl_3.grid(column=0, row=3, pady=20, padx=(0, 0))
 
+        number_of_ques = option_variables.get_number_of_ques()
         self.opt_menu_var3 = tk.StringVar(self.choice_window)
-        self.opt_menu_var3.set("5")
-        options_3 = [
-            "5",
-            "10"]
+        self.opt_menu_var3.set(number_of_ques[0])
 
-        """
-        options_3 = [
-            "5",
-            "10",
-            "15",
-            "20"]
-        """
-        list_of_numq = tk.OptionMenu(self.choice_window, self.opt_menu_var3, *options_3)
+        list_of_numq = tk.OptionMenu(self.choice_window, self.opt_menu_var3, *number_of_ques)
         list_of_numq.config(width=15, font="16", bg="white")
         list_of_numq.grid(row=3, column=1, sticky="W")
 
@@ -1188,19 +1035,12 @@ class TestWindow:
         self.test_window.title("Knowledge_checker")
 
         # Size of window and locate window on the screen
-        self.test_window.resizable(False, False)
-        screen_width = self.test_window.winfo_screenwidth()
-        screen_height = self.test_window.winfo_screenheight()
-        window_width = 440
-        window_height= 530
-        x_cordinate = int((screen_width / 2) - (window_width / 2))
-        y_cordinate = int((screen_height / 2) - (window_height / 2))
-        self.test_window.geometry(f'{window_width}x{window_height}+{x_cordinate}+{y_cordinate}')
+        window_action.put_in_center(self.test_window, window_height=530)
 
         self.ques_db, self.answ_db = self.get_data_from_bd(self.num_of_ques)
 
         self.text_ques = tk.StringVar(self.test_window)
-        self.text_ques.set(self.ques_db.pop())
+        self.text_ques.set(question_handler.modify_question(self.ques_db.pop()))
 
         self.answer_item = self.answ_db
         self.num_ques = tk.StringVar(self.test_window)
@@ -1326,7 +1166,7 @@ class TestWindow:
         self.answ.delete(0, tk.END)
 
     def next_ques(self):
-        self.text_ques.set(self.ques_db.pop())
+        self.text_ques.set(question_handler.modify_question(self.ques_db.pop()))
         self.num_ques.set(f"Залишилось питань: {len(self.ques_db) + 1} з {self.num_of_ques}")
 
 
@@ -1427,14 +1267,7 @@ class FinalWindow:
         self.seconds = seconds
 
         # Size of window and locate window on the screen
-        self.final_window.resizable(False, False)
-        screen_width = self.final_window.winfo_screenwidth()
-        screen_height = self.final_window.winfo_screenheight()
-        window_width = 440
-        window_height= 480
-        x_cordinate = int((screen_width / 2) - (window_width / 2))
-        y_cordinate = int((screen_height / 2) - (window_height / 2))
-        self.final_window.geometry(f'{window_width}x{window_height}+{x_cordinate}+{y_cordinate}')
+        window_action.put_in_center(self.final_window)
 
         lbl_6 = tk.Label(self.final_window, text=f"\n\n ВИ  ВІДПОВИЛИ ПРАВИЛЬНО НА \n\n {count_correct_answ} з {num_of_ques} питань за {self.seconds} секунд !!! ",
         font="32")
